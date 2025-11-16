@@ -14,4 +14,7 @@ dependencies:
   - ntlk
   - spaCy
   - transformers
+  - pytest
+  - pip
+  - sentence-transformers
   
