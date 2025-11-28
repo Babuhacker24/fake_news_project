@@ -72,25 +72,40 @@ def main():
     fpr, tpr, thresholds = roc_curve(y_test, y_scores)
     roc_auc = auc(fpr, tpr)
 
-    # ----- BEST THRESHOLD (YOUDEN'S J) -----
-    youden_J = tpr - fpr
-    best_idx = np.argmax(youden_J)
-    best_threshold = thresholds[best_idx]
+    
+    # =============================
+    # FIND BEST THRESHOLD FOR RECALL (FAKE NEWS)
+    # =============================
+    from sklearn.metrics import recall_score
+    
+    recalls = []
+    for t in thresholds:
+        y_pred_thr = (y_scores >= t).astype(int)
+        recalls.append(recall_score(y_test, y_pred_thr, pos_label=0))
+    
+    best_recall_idx = np.argmax(recalls)
+    best_recall_threshold = thresholds[best_recall_idx]
+    
+    print("\n=== Recall-Optimized Threshold (FAKE NEWS PRIORITY) ===")
+    print(f"Best threshold: {best_recall_threshold:.4f}")
+    print(f"Recall at this threshold: {recalls[best_recall_idx]:.4f}")
+    
+    # =============================
+    # PREDICT USING RECALL-OPTIMIZED THRESHOLD
+    # =============================
+    y_pred_recall = (y_scores >= best_recall_threshold).astype(int)
+    
+    print("\n=== Performance Using Recall-Optimized Threshold ===")
+    print("Accuracy:", accuracy_score(y_test, y_pred_recall))
+    print("F1 Score:", f1_score(y_test, y_pred_recall))
+    print("Recall (FAKE news):", recall_score(y_test, y_pred_recall, pos_label=0))
+    print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred_recall))
+    print("\nClassification Report:\n", classification_report(y_test, y_pred_recall))
+    
+    # PLOT ROC CURVE
+    plt.figure(figsize=(8, 6))
+    ...
 
-    print(f"\nOptimal threshold (Youden's J): {best_threshold:.4f}")
-    print(f"TPR at optimal threshold: {tpr[best_idx]:.4f}")
-    print(f"FPR at optimal threshold: {fpr[best_idx]:.4f}")
-
-    # ============================
-    # PREDICT USING OPTIMAL THRESHOLD
-    # ============================
-    y_pred_optimal = (y_scores >= best_threshold).astype(int)
-
-    print("\n=== Performance Using Optimal Threshold ===")
-    print("Accuracy:", accuracy_score(y_test, y_pred_optimal))
-    print("F1 Score:", f1_score(y_test, y_pred_optimal))
-    print("\nClassification Report:\n", classification_report(y_test, y_pred_optimal))
-    print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred_optimal))
 
     # ============================
     # PLOT ROC CURVE
