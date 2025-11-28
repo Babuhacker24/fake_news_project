@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-#!/usr/bin/env python3
 """
 Logistic Regression classifier using LLM embeddings (Sentence-Transformers).
+
 Outputs:
   - Default-threshold metrics (0.5)
   - ROC curve + AUC
@@ -21,8 +21,7 @@ from sklearn.metrics import (
     confusion_matrix,
     f1_score,
     roc_curve,
-    auc,
-    recall_score
+    auc
 )
 import matplotlib.pyplot as plt
 import pickle
@@ -72,7 +71,7 @@ def main():
     # ============================================================
     # ROC CURVE
     # ============================================================
-    y_scores = clf.predict_proba(X_test)[:, 1]
+    y_scores = clf.predict_proba(X_test)[:, 1]   # probability of class 1 (real)
     fpr, tpr, thresholds = roc_curve(y_test, y_scores)
     roc_auc = auc(fpr, tpr)
 
@@ -88,7 +87,7 @@ def main():
     print(f"TPR = {tpr[best_idx]:.4f}")
     print(f"FPR = {fpr[best_idx]:.4f}")
 
-    # Prediction using Youden's J threshold
+    # Predictions at ROC-optimal threshold
     y_pred_roc = (y_scores >= best_threshold_roc).astype(int)
     print("\n=== Metrics at ROC-Optimal Threshold ===")
     print("Accuracy:", accuracy_score(y_test, y_pred_roc))
@@ -117,7 +116,7 @@ def main():
         specificities.append(specificity)
 
     # ============================================================
-    # THRESHOLD FOR PRIORITIZING FAKE NEWS (MAX SENSITIVITY)
+    # THRESHOLD THAT MAXIMIZES SENSITIVITY (FAKE NEWS PRIORITY)
     # ============================================================
     best_idx_sens = np.argmax(sensitivities)
     best_threshold_sensitivity = thresholds[best_idx_sens]
@@ -158,7 +157,7 @@ def main():
     plt.legend()
     plt.show()
 
-    # Combined
+    # Combined sensitivity & specificity
     plt.figure(figsize=(10, 6))
     plt.plot(thresholds, sensitivities, label="Sensitivity (TPR)", color="blue")
     plt.plot(thresholds, specificities, label="Specificity (TNR)", color="green")
