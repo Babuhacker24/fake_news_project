@@ -136,6 +136,7 @@ def load_clean_df(input_path: Optional[str | Path] = None) -> pd.DataFrame:
         "Or pass --input artifacts/preprocessed_news.csv"
     )
 
+
 def numerize_embeddings(
     df: pd.DataFrame,
     text_col: str = "text",
@@ -230,3 +231,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
