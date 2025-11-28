@@ -71,7 +71,7 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, auc
 
 # Get predicted probabilities (for the positive class)
-y_scores = model.predict_proba(X_test)[:, 1]
+y_scores = clf.predict_proba(X_test)[:, 1]
 
 # Compute ROC curve values
 fpr, tpr, thresholds = roc_curve(y_test, y_scores)
