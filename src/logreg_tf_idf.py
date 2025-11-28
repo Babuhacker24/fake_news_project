@@ -35,12 +35,16 @@ def main():
     df = pd.read_csv(repo / "artifacts" / "preprocessed_news.csv")
     y = df["label"].astype(int).values
 
-    # Split
+    # ============================================================
+    # TRAIN / TEST SPLIT
+    # ============================================================
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42, stratify=y
     )
 
-    # Train Logistic Regression
+    # ============================================================
+    # TRAIN LOGISTIC REGRESSION
+    # ============================================================
     clf = LogisticRegression(
         max_iter=3000,
         n_jobs=-1,
@@ -48,11 +52,23 @@ def main():
     )
     clf.fit(X_train, y_train)
 
-    # Predict with default threshold 0.5
+    # ============================================================
+    # TRAINING PERFORMANCE
+    # ============================================================
+    y_train_pred = clf.predict(X_train)
+
+    print("\n=== Logistic Regression on TF-IDF (TRAINING SET) ===")
+    print("Accuracy:", accuracy_score(y_train, y_train_pred))
+    print("F1 Score:", f1_score(y_train, y_train_pred))
+    print("\nClassification Report:\n", classification_report(y_train, y_train_pred))
+    print("\nConfusion Matrix:\n", confusion_matrix(y_train, y_train_pred))
+
+    # ============================================================
+    # TEST PERFORMANCE (DEFAULT THRESHOLD = 0.5)
+    # ============================================================
     y_pred_default = clf.predict(X_test)
 
-    # Metrics (default threshold)
-    print("\n=== Logistic Regression on TF-IDF (Default Threshold = 0.5) ===")
+    print("\n=== Logistic Regression on TF-IDF (TEST SET, Threshold = 0.5) ===")
     print("Accuracy:", accuracy_score(y_test, y_pred_default))
     print("F1 Score:", f1_score(y_test, y_pred_default))
     print("\nClassification Report:\n", classification_report(y_test, y_pred_default))
@@ -64,15 +80,15 @@ def main():
         pickle.dump(clf, f)
     print(f"\nSaved model to: {model_path}")
 
-    # ============================
-    # ROC CURVE
-    # ============================
+    # ============================================================
+    # ROC CURVE (TEST SET)
+    # ============================================================
     y_scores = clf.predict_proba(X_test)[:, 1]  # probability of class 1
 
     fpr, tpr, thresholds = roc_curve(y_test, y_scores)
     roc_auc = auc(fpr, tpr)
 
-    # ----- BEST THRESHOLD (YOUDEN'S J) -----
+    # --- Youden's J Threshold ---
     youden_J = tpr - fpr
     best_idx = np.argmax(youden_J)
     best_threshold = thresholds[best_idx]
@@ -81,20 +97,18 @@ def main():
     print(f"TPR at optimal threshold: {tpr[best_idx]:.4f}")
     print(f"FPR at optimal threshold: {fpr[best_idx]:.4f}")
 
-    # ============================
-    # PREDICT USING OPTIMAL THRESHOLD
-    # ============================
+    # Predict using Youden threshold
     y_pred_optimal = (y_scores >= best_threshold).astype(int)
 
-    print("\n=== Performance Using Optimal Threshold ===")
+    print("\n=== Performance Using Optimal Threshold (TEST SET) ===")
     print("Accuracy:", accuracy_score(y_test, y_pred_optimal))
     print("F1 Score:", f1_score(y_test, y_pred_optimal))
     print("\nClassification Report:\n", classification_report(y_test, y_pred_optimal))
     print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred_optimal))
 
-    # ============================
+    # ============================================================
     # PLOT ROC CURVE
-    # ============================
+    # ============================================================
     plt.figure(figsize=(8, 6))
     plt.plot(fpr, tpr, label=f"LogReg (AUC = {roc_auc:.4f})")
     plt.plot([0, 1], [0, 1], "k--", label="Random Guessing")
