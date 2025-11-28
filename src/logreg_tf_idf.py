@@ -56,12 +56,13 @@ def main():
     # TRAINING PERFORMANCE
     # ============================================================
     y_train_pred = clf.predict(X_train)
-
+    
     print("\n=== Logistic Regression on TF-IDF (TRAINING SET) ===")
     print("Accuracy:", accuracy_score(y_train, y_train_pred))
     print("F1 Score:", f1_score(y_train, y_train_pred))
     print("\nClassification Report:\n", classification_report(y_train, y_train_pred))
     print("\nConfusion Matrix:\n", confusion_matrix(y_train, y_train_pred))
+
 
     # ============================================================
     # TEST PERFORMANCE (DEFAULT THRESHOLD = 0.5)
