@@ -67,3 +67,28 @@ def main():
 if __name__ == "__main__":
     main()
 
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve, auc
+
+# Get predicted probabilities (for the positive class)
+y_scores = model.predict_proba(X_test)[:, 1]
+
+# Compute ROC curve values
+fpr, tpr, thresholds = roc_curve(y_test, y_scores)
+
+# Compute AUC
+roc_auc = auc(fpr, tpr)
+
+# Plot ROC Curve
+plt.figure(figsize=(8, 6))
+plt.plot(fpr, tpr, label=f"Logistic Regression (AUC = {roc_auc:.4f})")
+plt.plot([0, 1], [0, 1], "k--", label="Random Guessing")
+
+plt.title("ROC Curve – Logistic Regression (TF-IDF)", fontsize=14)
+plt.xlabel("False Positive Rate")
+plt.ylabel("True Positive Rate")
+plt.legend(loc="lower right")
+plt.grid(True)
+
+plt.show()
+
