@@ -2,10 +2,6 @@
 """
 Logistic Regression classifier using precomputed TF-IDF features.
 
-Inputs:
-  X: <repo>/artifacts/X_tfidf.npz
-  y: <repo>/artifacts/preprocessed_news.csv (column: 'label')
-
 Run:
   python src/logreg_tfidf.py
 """
@@ -21,7 +17,12 @@ from sklearn.metrics import (
     classification_report,
     confusion_matrix,
     f1_score,
+    roc_curve,
+    auc
 )
+import matplotlib.pyplot as plt
+import pickle
+
 
 def main():
     repo = Path(__file__).resolve().parents[1]
@@ -32,7 +33,7 @@ def main():
 
     # Load labels
     df = pd.read_csv(repo / "artifacts" / "preprocessed_news.csv")
-    y = df["label"].astype(int).values   # ensure numeric 0/1
+    y = df["label"].astype(int).values
 
     # Split
     X_train, X_test, y_train, y_test = train_test_split(
@@ -57,38 +58,32 @@ def main():
     print("\nClassification Report:\n", classification_report(y_test, y_pred))
     print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred))
 
-    # Optional: save model
-    import pickle
+    # Save model
     model_path = repo / "artifacts" / "logreg_tfidf.pkl"
     with open(model_path, "wb") as f:
         pickle.dump(clf, f)
     print(f"\nSaved model to: {model_path}")
 
+    # ============================
+    # ROC CURVE (NOW IN CORRECT PLACE)
+    # ============================
+    y_scores = clf.predict_proba(X_test)[:, 1]  # probability of class 1
+
+    fpr, tpr, thresholds = roc_curve(y_test, y_scores)
+    roc_auc = auc(fpr, tpr)
+
+    plt.figure(figsize=(8, 6))
+    plt.plot(fpr, tpr, label=f"LogReg (AUC = {roc_auc:.4f})")
+    plt.plot([0, 1], [0, 1], "k--", label="Random Guessing")
+
+    plt.title("ROC Curve – Logistic Regression (TF-IDF)", fontsize=14)
+    plt.xlabel("False Positive Rate")
+    plt.ylabel("True Positive Rate")
+    plt.legend(loc="lower right")
+    plt.grid(True)
+
+    plt.show()
+
+
 if __name__ == "__main__":
     main()
-
-import matplotlib.pyplot as plt
-from sklearn.metrics import roc_curve, auc
-
-# Get predicted probabilities (for the positive class)
-y_scores = clf.predict_proba(X_test)[:, 1]
-
-# Compute ROC curve values
-fpr, tpr, thresholds = roc_curve(y_test, y_scores)
-
-# Compute AUC
-roc_auc = auc(fpr, tpr)
-
-# Plot ROC Curve
-plt.figure(figsize=(8, 6))
-plt.plot(fpr, tpr, label=f"Logistic Regression (AUC = {roc_auc:.4f})")
-plt.plot([0, 1], [0, 1], "k--", label="Random Guessing")
-
-plt.title("ROC Curve – Logistic Regression (TF-IDF)", fontsize=14)
-plt.xlabel("False Positive Rate")
-plt.ylabel("True Positive Rate")
-plt.legend(loc="lower right")
-plt.grid(True)
-
-plt.show()
-
