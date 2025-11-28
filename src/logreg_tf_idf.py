@@ -48,15 +48,15 @@ def main():
     )
     clf.fit(X_train, y_train)
 
-    # Predict
-    y_pred = clf.predict(X_test)
+    # Predict with default threshold 0.5
+    y_pred_default = clf.predict(X_test)
 
-    # Metrics
-    print("\n=== Logistic Regression on TF-IDF ===")
-    print("Accuracy:", accuracy_score(y_test, y_pred))
-    print("F1 Score:", f1_score(y_test, y_pred))
-    print("\nClassification Report:\n", classification_report(y_test, y_pred))
-    print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred))
+    # Metrics (default threshold)
+    print("\n=== Logistic Regression on TF-IDF (Default Threshold = 0.5) ===")
+    print("Accuracy:", accuracy_score(y_test, y_pred_default))
+    print("F1 Score:", f1_score(y_test, y_pred_default))
+    print("\nClassification Report:\n", classification_report(y_test, y_pred_default))
+    print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred_default))
 
     # Save model
     model_path = repo / "artifacts" / "logreg_tfidf.pkl"
@@ -65,23 +65,44 @@ def main():
     print(f"\nSaved model to: {model_path}")
 
     # ============================
-    # ROC CURVE (NOW IN CORRECT PLACE)
+    # ROC CURVE
     # ============================
     y_scores = clf.predict_proba(X_test)[:, 1]  # probability of class 1
 
     fpr, tpr, thresholds = roc_curve(y_test, y_scores)
     roc_auc = auc(fpr, tpr)
 
+    # ----- BEST THRESHOLD (YOUDEN'S J) -----
+    youden_J = tpr - fpr
+    best_idx = np.argmax(youden_J)
+    best_threshold = thresholds[best_idx]
+
+    print(f"\nOptimal threshold (Youden's J): {best_threshold:.4f}")
+    print(f"TPR at optimal threshold: {tpr[best_idx]:.4f}")
+    print(f"FPR at optimal threshold: {fpr[best_idx]:.4f}")
+
+    # ============================
+    # PREDICT USING OPTIMAL THRESHOLD
+    # ============================
+    y_pred_optimal = (y_scores >= best_threshold).astype(int)
+
+    print("\n=== Performance Using Optimal Threshold ===")
+    print("Accuracy:", accuracy_score(y_test, y_pred_optimal))
+    print("F1 Score:", f1_score(y_test, y_pred_optimal))
+    print("\nClassification Report:\n", classification_report(y_test, y_pred_optimal))
+    print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred_optimal))
+
+    # ============================
+    # PLOT ROC CURVE
+    # ============================
     plt.figure(figsize=(8, 6))
     plt.plot(fpr, tpr, label=f"LogReg (AUC = {roc_auc:.4f})")
     plt.plot([0, 1], [0, 1], "k--", label="Random Guessing")
-
-    plt.title("ROC Curve – Logistic Regression (TF-IDF)", fontsize=14)
     plt.xlabel("False Positive Rate")
     plt.ylabel("True Positive Rate")
+    plt.title("ROC Curve – Logistic Regression (TF-IDF)")
     plt.legend(loc="lower right")
     plt.grid(True)
-
     plt.show()
 
 
