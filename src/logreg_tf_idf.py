@@ -72,7 +72,7 @@ def main():
     print("\n=== Logistic Regression on TF-IDF (TEST SET, Threshold = 0.5) ===")
     print("Accuracy:", accuracy_score(y_test, y_pred_default))
     print("F1 Score:", f1_score(y_test, y_pred_default))
-    print("\nClassification Report:\n", classification_report(y_test, y_pred_default),digits=4)
+    print("\nClassification Report:\n", classification_report(y_test, y_pred_default,digits=4))
     print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred_default))
 
     # Save model
@@ -104,7 +104,7 @@ def main():
     print("\n=== Performance Using Optimal Threshold (TEST SET) ===")
     print("Accuracy:", accuracy_score(y_test, y_pred_optimal))
     print("F1 Score:", f1_score(y_test, y_pred_optimal))
-    print("\nClassification Report:\n", classification_report(y_test, y_pred_optimal),digits=4)
+    print("\nClassification Report:\n", classification_report(y_test, y_pred_optimal,digits=4))
     print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred_optimal))
 
     # ============================================================
