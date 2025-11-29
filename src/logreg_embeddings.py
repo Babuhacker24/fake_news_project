@@ -71,7 +71,7 @@ def main():
     print("\n=== Logistic Regression on Embeddings (Threshold = 0.5) ===")
     print("Accuracy:", accuracy_score(y_test, y_pred_default))
     print("F1 Score:", f1_score(y_test, y_pred_default))
-    print("\nClassification Report:\n", classification_report(y_test, y_pred_default),digits=4)
+    print("\nClassification Report:\n", classification_report(y_test, y_pred_default,digits=4))
     print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred_default))
 
     # Save model
@@ -105,7 +105,7 @@ def main():
     print("Accuracy:", accuracy_score(y_test, y_pred_roc))
     print("F1 Score:", f1_score(y_test, y_pred_roc))
     print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred_roc))
-    print("\nClassification Report:\n", classification_report(y_test, y_pred_roc),digits=4)
+    print("\nClassification Report:\n", classification_report(y_test, y_pred_roc,digits=4))
 
     # ============================================================
     # LOOP OVER THRESHOLDS → SENSITIVITY & SPECIFICITY
@@ -140,8 +140,8 @@ def main():
     y_pred_sens = (y_scores >= best_threshold_sensitivity).astype(int)
 
     print("\n=== Metrics at Sensitivity-Optimized Threshold ===")
-    print("Accuracy:", accuracy_score(y_test, y_pred_sens),digits=4)
-    print("F1 Score:", f1_score(y_test, y_pred_sens),digits=4)
+    print("Accuracy:", accuracy_score(y_test, y_pred_sens,digits=4))
+    print("F1 Score:", f1_score(y_test, y_pred_sens,digits=4))
     print("Recall (Fake News):", sensitivities[best_idx_sens])
     print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred_sens))
 
