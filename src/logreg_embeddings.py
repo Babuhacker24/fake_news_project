@@ -50,6 +50,18 @@ def main():
         solver="lbfgs"
     )
     clf.fit(X_train, y_train)
+  
+    # ============================================================
+    # TRAINING PERFORMANCE
+    # ============================================================
+    y_train_pred = clf.predict(X_train)
+    
+    print("\n=== Logistic Regression on Embeddings (TRAINING SET) ===")
+    print("Accuracy: {:.4f}".format(accuracy_score(y_train, y_train_pred)))
+    print("F1 Score: {:.4f}".format(f1_score(y_train, y_train_pred)))
+    print("\nClassification Report:\n", classification_report(y_train, y_train_pred, digits=4))
+    print("\nConfusion Matrix:\n", confusion_matrix(y_train, y_train_pred))
+
 
     # ============================================================
     # DEFAULT THRESHOLD METRICS (0.5)
@@ -59,7 +71,7 @@ def main():
     print("\n=== Logistic Regression on Embeddings (Threshold = 0.5) ===")
     print("Accuracy:", accuracy_score(y_test, y_pred_default))
     print("F1 Score:", f1_score(y_test, y_pred_default))
-    print("\nClassification Report:\n", classification_report(y_test, y_pred_default))
+    print("\nClassification Report:\n", classification_report(y_test, y_pred_default,digits=4))
     print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred_default))
 
     # Save model
@@ -93,7 +105,7 @@ def main():
     print("Accuracy:", accuracy_score(y_test, y_pred_roc))
     print("F1 Score:", f1_score(y_test, y_pred_roc))
     print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred_roc))
-    print("\nClassification Report:\n", classification_report(y_test, y_pred_roc))
+    print("\nClassification Report:\n", classification_report(y_test, y_pred_roc,digits=4))
 
     # ============================================================
     # LOOP OVER THRESHOLDS → SENSITIVITY & SPECIFICITY
