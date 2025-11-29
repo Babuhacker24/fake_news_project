@@ -140,8 +140,8 @@ def main():
     y_pred_sens = (y_scores >= best_threshold_sensitivity).astype(int)
 
     print("\n=== Metrics at Sensitivity-Optimized Threshold ===")
-    print("Accuracy:", accuracy_score(y_test, y_pred_sens,digits=4))
-    print("F1 Score:", f1_score(y_test, y_pred_sens,digits=4))
+    print("Accuracy:", accuracy_score(y_test, y_pred_sens))
+    print("F1 Score:", f1_score(y_test, y_pred_sens))
     print("Recall (Fake News):", sensitivities[best_idx_sens])
     print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred_sens))
 
