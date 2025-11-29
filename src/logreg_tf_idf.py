@@ -107,6 +107,29 @@ def main():
     print("\nClassification Report:\n", classification_report(y_test, y_pred_optimal,digits=4))
     print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred_optimal))
 
+    # ============================================
+    # THRESHOLD THAT MINIMIZES TYPE II ERRORS
+    # (MAXIMIZES RECALL FOR FAKE NEWS)
+    # ============================================
+    
+    best_idx_recall = np.argmax(tpr)  # index where recall is highest
+    best_threshold_recall = thresholds[best_idx_recall]
+    
+    print("\n=== Threshold that Minimizes Type II Errors (Max Recall for Fake News) ===")
+    print(f"Threshold: {best_threshold_recall:.4f}")
+    print(f"Recall (TPR for fake news): {tpr[best_idx_recall]:.4f}")
+    print(f"FPR at this threshold: {fpr[best_idx_recall]:.4f}")
+    
+    # Predictions using recall-optimized threshold
+    y_pred_recall = (y_scores >= best_threshold_recall).astype(int)
+    
+    print("\n=== Performance with Recall-Optimized Threshold (TEST SET) ===")
+    print("Accuracy:", accuracy_score(y_test, y_pred_recall))
+    print("F1 Score:", f1_score(y_test, y_pred_recall))
+    print("\nClassification Report:\n", 
+          classification_report(y_test, y_pred_recall, digits=4))
+    print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred_recall))
+
     # ============================================================
     # PLOT ROC CURVE
     # ============================================================
