@@ -47,7 +47,7 @@ def main():
     # ============================================================
     clf = LogisticRegression(
         max_iter=3000,
-        n_jobs=1,
+        n_jobs=-1,
         solver="lbfgs"
     )
     clf.fit(X_train, y_train)
