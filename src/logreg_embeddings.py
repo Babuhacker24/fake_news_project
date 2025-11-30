@@ -35,6 +35,7 @@ def main():
     # ============================================================
     X = np.load(repo / "artifacts" / "embeddings_minilm.npy")
     y = np.load(repo / "artifacts" / "embeddings_minilm_labels.npy")
+    y = 1 - y
 
     # Train/test split
     X_train, X_test, y_train, y_test = train_test_split(
