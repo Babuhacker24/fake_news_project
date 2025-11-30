@@ -3,30 +3,63 @@
 Logistic Regression classifier using LLM embeddings (Sentence-Transformers).
 
 Outputs:
-  - Default-threshold metrics (0.5)
+  - Train & test metrics at default threshold (0.5)
   - ROC curve + AUC
   - Youden's J optimal threshold
-  - Sensitivity/specificity curves
-  - Threshold-optimized metrics
+  - Manual threshold testing
+  - Threshold curves (TPR, FPR, specificity)
 """
 
 from pathlib import Path
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
-    accuracy_score,
     classification_report,
     confusion_matrix,
-    f1_score,
+    accuracy_score,
     roc_curve,
-    auc
+    auc,
+    f1_score
 )
-import matplotlib.pyplot as plt
 import pickle
 
 
+# ============================================================
+# Utility Functions
+# ============================================================
+def evaluate_threshold(y_true, y_scores, threshold):
+    """Return predictions + metrics at a given threshold."""
+    y_pred = (y_scores >= threshold).astype(int)
+
+    return {
+        "threshold": threshold,
+        "pred": y_pred,
+        "accuracy": accuracy_score(y_true, y_pred),
+        "f1": f1_score(y_true, y_pred),
+        "cm": confusion_matrix(y_true, y_pred),
+        "report": classification_report(y_true, y_pred, digits=4)
+    }
+
+
+def print_metrics(title, metrics):
+    """Beautiful, consistent formatted printing."""
+    print("\n" + "=" * 60)
+    print(title)
+    print("=" * 60)
+    print(f"Threshold: {metrics['threshold']:.4f}")
+    print(f"Accuracy : {metrics['accuracy']:.4f}")
+    print(f"F1 Score : {metrics['f1']:.4f}")
+    print("\nClassification Report:\n", metrics["report"])
+    print("Confusion Matrix:\n", metrics["cm"], "\n")
+
+
+# ============================================================
+# Main Script
+# ============================================================
 def main():
     repo = Path(__file__).resolve().parents[1]
 
@@ -35,154 +68,104 @@ def main():
     # ============================================================
     X = np.load(repo / "artifacts" / "embeddings_minilm.npy")
     y = np.load(repo / "artifacts" / "embeddings_minilm_labels.npy")
-    y = 1 - y
 
-    # Train/test split
+    # IMPORTANT: Flip labels if they were inverted during labeling
+    y = 1 - y  # ensures: 1 = fake, 0 = real (or whichever convention you use)
+
+    # Split data
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42, stratify=y
+        X, y, test_size=0.2, stratify=y, random_state=42
     )
 
     # ============================================================
     # TRAIN LOGISTIC REGRESSION
     # ============================================================
-    clf = LogisticRegression(
-        max_iter=3000,
-        n_jobs=-1,
-        solver="lbfgs"
-    )
+    clf = LogisticRegression(max_iter=3000, n_jobs=-1, solver="lbfgs")
     clf.fit(X_train, y_train)
-  
+
     # ============================================================
     # TRAINING PERFORMANCE
     # ============================================================
     y_train_pred = clf.predict(X_train)
-    
+
     print("\n=== Logistic Regression on Embeddings (TRAINING SET) ===")
-    print("Accuracy: {:.4f}".format(accuracy_score(y_train, y_train_pred)))
-    print("F1 Score: {:.4f}".format(f1_score(y_train, y_train_pred)))
+    print(f"Accuracy: {accuracy_score(y_train, y_train_pred):.4f}")
+    print(f"F1 Score: {f1_score(y_train, y_train_pred):.4f}")
     print("\nClassification Report:\n", classification_report(y_train, y_train_pred, digits=4))
     print("\nConfusion Matrix:\n", confusion_matrix(y_train, y_train_pred))
 
-
     # ============================================================
-    # DEFAULT THRESHOLD METRICS (0.5)
+    # TEST PERFORMANCE — DEFAULT THRESHOLD 0.5
     # ============================================================
+    print("\n=== Logistic Regression on Embeddings (TEST SET — Threshold = 0.5) ===")
     y_pred_default = clf.predict(X_test)
-
-    print("\n=== Logistic Regression on Embeddings (Threshold = 0.5) ===")
-    print("Accuracy:", accuracy_score(y_test, y_pred_default))
-    print("F1 Score:", f1_score(y_test, y_pred_default))
-    print("\nClassification Report:\n", classification_report(y_test, y_pred_default,digits=4))
+    print(f"Accuracy: {accuracy_score(y_test, y_pred_default):.4f}")
+    print(f"F1 Score: {f1_score(y_test, y_pred_default):.4f}")
+    print("\nClassification Report:\n", classification_report(y_test, y_pred_default, digits=4))
     print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred_default))
 
     # Save model
     model_path = repo / "artifacts" / "logreg_embeddings.pkl"
     with open(model_path, "wb") as f:
         pickle.dump(clf, f)
+
     print(f"\nSaved model to: {model_path}")
 
     # ============================================================
-    # ROC CURVE
+    # ROC CURVE + THRESHOLDS
     # ============================================================
-    y_scores = clf.predict_proba(X_test)[:, 1]   # probability of class 1 (real)
+    y_scores = clf.predict_proba(X_test)[:, 1]  # probability of class "1"
+
     fpr, tpr, thresholds = roc_curve(y_test, y_scores)
     roc_auc = auc(fpr, tpr)
 
-    # ============================================================
-    # YOUDEN'S J STATISTIC (BEST ROC THRESHOLD)
-    # ============================================================
+    # Youden's J index
     J = tpr - fpr
     best_idx = np.argmax(J)
-    best_threshold_roc = thresholds[best_idx]
+    best_thr_youden = thresholds[best_idx]
 
-    print("\n=== ROC-Optimal Threshold (Youden's J) ===")
-    print(f"Best threshold: {best_threshold_roc:.4f}")
-    print(f"TPR = {tpr[best_idx]:.4f}")
-    print(f"FPR = {fpr[best_idx]:.4f}")
-
-    # Predictions at ROC-optimal threshold
-    y_pred_roc = (y_scores >= best_threshold_roc).astype(int)
-    print("\n=== Metrics at ROC-Optimal Threshold ===")
-    print("Accuracy:", accuracy_score(y_test, y_pred_roc))
-    print("F1 Score:", f1_score(y_test, y_pred_roc))
-    print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred_roc))
-    print("\nClassification Report:\n", classification_report(y_test, y_pred_roc,digits=4))
+    # Evaluate at Youden threshold
+    youden_metrics = evaluate_threshold(y_test, y_scores, best_thr_youden)
+    print_metrics("ROC-Optimal Threshold (Youden’s J)", youden_metrics)
 
     # ============================================================
-    # MANUAL THRESHOLD TESTING (TRIAL & ERROR)
+    # MANUAL TRIAL-AND-ERROR THRESHOLD
     # ============================================================
-    
-    # >>> Change this value to test any threshold you want <<<
     manual_threshold = 0.4550
-    
-    print(f"\n=== Manual Threshold Test at {manual_threshold:.4f} ===")
-    
-    # Apply threshold manually
-    y_pred_manual = (y_scores >= manual_threshold).astype(int)
-    
-    # Compute metrics
-    acc_manual = accuracy_score(y_test, y_pred_manual)
-    f1_manual = f1_score(y_test, y_pred_manual)
-    cm_manual = confusion_matrix(y_test, y_pred_manual)
-    
-    print(f"Accuracy: {acc_manual:.4f}")
-    print(f"F1 Score: {f1_manual:.4f}")
-    
-    print("\nClassification Report:\n",
-          classification_report(y_test, y_pred_manual, digits=4))
-    
-    print("\nConfusion Matrix:\n", cm_manual)
+    manual_metrics = evaluate_threshold(y_test, y_scores, manual_threshold)
+    print_metrics("Manual Threshold Test", manual_metrics)
 
     # ============================================================
-    # PLOTS
+    # SENSITIVITY & SPECIFICITY CURVES
     # ============================================================
+    sensitivities = tpr
+    specificities = 1 - fpr  # TNR
 
     # Sensitivity vs Threshold
-    plt.figure(figsize=(8, 6))
-    plt.plot(thresholds, sensitivities, label="Sensitivity (TPR)", color="blue")
-    plt.xlabel("Threshold")
-    plt.ylabel("Sensitivity")
-    plt.title("Sensitivity vs Threshold (Embeddings)")
-    plt.grid(True)
-    plt.legend()
-    plt.show()
-
-    # Specificity vs Threshold
-    plt.figure(figsize=(8, 6))
-    plt.plot(thresholds, specificities, label="Specificity (TNR)", color="green")
-    plt.xlabel("Threshold")
-    plt.ylabel("Specificity")
-    plt.title("Specificity vs Threshold (Embeddings)")
-    plt.grid(True)
-    plt.legend()
-    plt.show()
-
-    # Combined sensitivity & specificity
-    plt.figure(figsize=(10, 6))
-    plt.plot(thresholds, sensitivities, label="Sensitivity (TPR)", color="blue")
-    plt.plot(thresholds, specificities, label="Specificity (TNR)", color="green")
-    plt.axvline(best_threshold_sensitivity, color="red", linestyle="--",
-                label=f"Chosen Threshold = {best_threshold_sensitivity:.4f}")
+    plt.figure(figsize=(8, 5))
+    plt.plot(thresholds, sensitivities, label="TPR (Sensitivity)")
+    plt.plot(thresholds, specificities, label="TNR (Specificity)")
+    plt.axvline(best_thr_youden, color="red", ls="--", label="Youden Threshold")
     plt.xlabel("Threshold")
     plt.ylabel("Metric Value")
-    plt.title("Sensitivity & Specificity vs Threshold (Embeddings)")
+    plt.title("Sensitivity & Specificity vs Threshold")
     plt.grid(True)
     plt.legend()
     plt.show()
 
-    # ROC curve
-    plt.figure(figsize=(8, 6))
+    # ROC Curve
+    plt.figure(figsize=(8, 5))
     plt.plot(fpr, tpr, label=f"AUC = {roc_auc:.4f}")
-    plt.scatter(fpr[best_idx], tpr[best_idx], color="red", s=60,
-                label="ROC-Optimal Threshold")
+    plt.scatter(fpr[best_idx], tpr[best_idx], color="red", s=60, label="Youden Threshold")
     plt.plot([0, 1], [0, 1], "k--")
     plt.xlabel("False Positive Rate")
     plt.ylabel("True Positive Rate")
-    plt.title("ROC Curve – Logistic Regression (Embeddings)")
-    plt.legend()
+    plt.title("ROC Curve — Logistic Regression (Embeddings)")
     plt.grid(True)
+    plt.legend()
     plt.show()
 
 
 if __name__ == "__main__":
     main()
+
