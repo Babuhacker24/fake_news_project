@@ -108,50 +108,30 @@ def main():
     print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred_optimal))
 
     # ============================================================
-    # THRESHOLD THAT MINIMIZES WEIGHTED ERROR COST
+    # MANUAL THRESHOLD TESTING (TRIAL & ERROR)
     # ============================================================
     
-    C_FN = 5   # cost of false negative (missing fake news)
-    C_FP = 1   # cost of false positive (flagging true news)
+    # >>> Change this value to test any threshold you want <<<
+    manual_threshold = 0.4950
     
-    costs = []
-    FN_list = []
-    FP_list = []
+    print(f"\n=== Manual Threshold Test at {manual_threshold:.4f} ===")
     
-    for t in thresholds:
-        y_pred_thr = (y_scores >= t).astype(int)
+    # Apply threshold manually
+    y_pred_manual = (y_scores >= manual_threshold).astype(int)
     
-        # Confusion matrix components
-        TP = np.sum((y_test == 1) & (y_pred_thr == 1))
-        FN = np.sum((y_test == 1) & (y_pred_thr == 0))
-        FP = np.sum((y_test == 0) & (y_pred_thr == 1))
-        TN = np.sum((y_test == 0) & (y_pred_thr == 0))
+    # Compute metrics
+    acc_manual = accuracy_score(y_test, y_pred_manual)
+    f1_manual = f1_score(y_test, y_pred_manual)
+    cm_manual = confusion_matrix(y_test, y_pred_manual)
     
-        total_cost = C_FN * FN + C_FP * FP
+    print(f"Accuracy: {acc_manual:.4f}")
+    print(f"F1 Score: {f1_manual:.4f}")
     
-        costs.append(total_cost)
-        FN_list.append(FN)
-        FP_list.append(FP)
-    
-    best_idx_cost = np.argmin(costs)
-    best_threshold_cost = thresholds[best_idx_cost]
-    
-    print("\n=== Threshold that Minimizes Weighted Error Cost ===")
-    print(f"Cost_FN = {C_FN}, Cost_FP = {C_FP}")
-    print(f"Best threshold: {best_threshold_cost:.4f}")
-    print(f"FN at this threshold: {FN_list[best_idx_cost]}")
-    print(f"FP at this threshold: {FP_list[best_idx_cost]}")
-    print(f"Total cost: {costs[best_idx_cost]}")
-    
-    # Predict using weighted-cost optimal threshold
-    y_pred_cost = (y_scores >= best_threshold_cost).astype(int)
-    
-    print("\n=== Performance with Weighted-Cost Threshold ===")
-    print("Accuracy:", accuracy_score(y_test, y_pred_cost))
-    print("F1 Score:", f1_score(y_test, y_pred_cost))
     print("\nClassification Report:\n",
-          classification_report(y_test, y_pred_cost, digits=4))
-    print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred_cost))
+          classification_report(y_test, y_pred_manual, digits=4))
+    
+    print("\nConfusion Matrix:\n", cm_manual)
+    
 
 
 
