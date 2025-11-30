@@ -112,7 +112,7 @@ def main():
     # ============================================================
     
     # >>> Change this value to test any threshold you want <<<
-    manual_threshold = 0.4950
+    manual_threshold = 0.4750
     
     print(f"\n=== Manual Threshold Test at {manual_threshold:.4f} ===")
     
