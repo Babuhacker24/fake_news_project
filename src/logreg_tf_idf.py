@@ -131,6 +131,28 @@ def main():
           classification_report(y_test, y_pred_manual, digits=4))
     
     print("\nConfusion Matrix:\n", cm_manual)
+
+    # ============================================================
+# PLOT: False Negatives (FN) vs Threshold
+# ============================================================
+
+FN_values = []
+
+for t in thresholds:
+    y_pred_thr = (y_scores >= t).astype(int)
+
+    # FN = fake news predicted as true
+    FN = np.sum((y_test == 1) & (y_pred_thr == 0))
+    FN_values.append(FN)
+
+plt.figure(figsize=(9, 6))
+plt.plot(thresholds, FN_values, marker='.', linewidth=1)
+plt.xlabel("Threshold")
+plt.ylabel("False Negatives (FN)")
+plt.title("False Negatives vs Threshold")
+plt.grid(True)
+plt.show()
+
     
 
 
