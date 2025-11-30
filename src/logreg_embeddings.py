@@ -108,42 +108,29 @@ def main():
     print("\nClassification Report:\n", classification_report(y_test, y_pred_roc,digits=4))
 
     # ============================================================
-    # LOOP OVER THRESHOLDS → SENSITIVITY & SPECIFICITY
+    # MANUAL THRESHOLD TESTING (TRIAL & ERROR)
     # ============================================================
-    sensitivities = []
-    specificities = []
-
-    for t in thresholds:
-        y_pred_thr = (y_scores >= t).astype(int)
-
-        TP = np.sum((y_test == 0) & (y_pred_thr == 0))
-        FN = np.sum((y_test == 0) & (y_pred_thr == 1))
-        TN = np.sum((y_test == 1) & (y_pred_thr == 1))
-        FP = np.sum((y_test == 1) & (y_pred_thr == 0))
-
-        sensitivity = TP / (TP + FN) if (TP + FN) > 0 else 0
-        specificity = TN / (TN + FP) if (TN + FP) > 0 else 0
-
-        sensitivities.append(sensitivity)
-        specificities.append(specificity)
-
-    # ============================================================
-    # THRESHOLD THAT MAXIMIZES SENSITIVITY (FAKE NEWS PRIORITY)
-    # ============================================================
-    best_idx_sens = np.argmax(sensitivities)
-    best_threshold_sensitivity = thresholds[best_idx_sens]
-
-    print("\n=== Sensitivity-Maximizing Threshold (Fake News Priority) ===")
-    print(f"Best threshold for sensitivity: {best_threshold_sensitivity:.4f}")
-    print(f"Sensitivity at this threshold: {sensitivities[best_idx_sens]:.4f}")
-
-    y_pred_sens = (y_scores >= best_threshold_sensitivity).astype(int)
-
-    print("\n=== Metrics at Sensitivity-Optimized Threshold ===")
-    print("Accuracy:", accuracy_score(y_test, y_pred_sens))
-    print("F1 Score:", f1_score(y_test, y_pred_sens))
-    print("Recall (Fake News):", sensitivities[best_idx_sens])
-    print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred_sens))
+    
+    # >>> Change this value to test any threshold you want <<<
+    manual_threshold = 0.3550
+    
+    print(f"\n=== Manual Threshold Test at {manual_threshold:.4f} ===")
+    
+    # Apply threshold manually
+    y_pred_manual = (y_scores >= manual_threshold).astype(int)
+    
+    # Compute metrics
+    acc_manual = accuracy_score(y_test, y_pred_manual)
+    f1_manual = f1_score(y_test, y_pred_manual)
+    cm_manual = confusion_matrix(y_test, y_pred_manual)
+    
+    print(f"Accuracy: {acc_manual:.4f}")
+    print(f"F1 Score: {f1_manual:.4f}")
+    
+    print("\nClassification Report:\n",
+          classification_report(y_test, y_pred_manual, digits=4))
+    
+    print("\nConfusion Matrix:\n", cm_manual)
 
     # ============================================================
     # PLOTS
