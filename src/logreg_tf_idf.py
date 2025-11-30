@@ -34,6 +34,8 @@ def main():
     # Load labels
     df = pd.read_csv(repo / "artifacts" / "preprocessed_news.csv")
     y = df["label"].astype(int).values
+    y = 1 - y
+
 
     # ============================================================
     # TRAIN / TEST SPLIT
