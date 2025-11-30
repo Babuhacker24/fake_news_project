@@ -195,52 +195,6 @@ def main():
     plt.grid(True)
     plt.show()
 
-    # ============================================================
-    # THRESHOLD THAT MINIMIZES WEIGHTED ERROR COST
-    # ============================================================
-    
-    C_FN = 5   # cost of false negative (missing fake news)
-    C_FP = 1   # cost of false positive (flagging true news)
-    
-    costs = []
-    FN_list = []
-    FP_list = []
-    
-    for t in thresholds:
-        y_pred_thr = (y_scores >= t).astype(int)
-    
-        # Confusion matrix components
-        TP = np.sum((y_test == 1) & (y_pred_thr == 1))
-        FN = np.sum((y_test == 1) & (y_pred_thr == 0))
-        FP = np.sum((y_test == 0) & (y_pred_thr == 1))
-        TN = np.sum((y_test == 0) & (y_pred_thr == 0))
-    
-        total_cost = C_FN * FN + C_FP * FP
-    
-        costs.append(total_cost)
-        FN_list.append(FN)
-        FP_list.append(FP)
-    
-    best_idx_cost = np.argmin(costs)
-    best_threshold_cost = thresholds[best_idx_cost]
-    
-    print("\n=== Threshold that Minimizes Weighted Error Cost ===")
-    print(f"Cost_FN = {C_FN}, Cost_FP = {C_FP}")
-    print(f"Best threshold: {best_threshold_cost:.4f}")
-    print(f"FN at this threshold: {FN_list[best_idx_cost]}")
-    print(f"FP at this threshold: {FP_list[best_idx_cost]}")
-    print(f"Total cost: {costs[best_idx_cost]}")
-    
-    # Predict using weighted-cost optimal threshold
-    y_pred_cost = (y_scores >= best_threshold_cost).astype(int)
-    
-    print("\n=== Performance with Weighted-Cost Threshold ===")
-    print("Accuracy:", accuracy_score(y_test, y_pred_cost))
-    print("F1 Score:", f1_score(y_test, y_pred_cost))
-    print("\nClassification Report:\n",
-          classification_report(y_test, y_pred_cost, digits=4))
-    print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred_cost))
-
 
 if __name__ == "__main__":
     main()
