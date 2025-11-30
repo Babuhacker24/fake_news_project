@@ -153,6 +153,28 @@ def main():
     plt.grid(True)
     plt.show()
 
+    # ============================================================
+    # PLOT: False Positives (FP) vs Threshold
+    # ============================================================
+    
+    FP_values = []
+    
+    for t in thresholds:
+        y_pred_thr = (y_scores >= t).astype(int)
+    
+        # FP = true news predicted as fake
+        FP = np.sum((y_test == 0) & (y_pred_thr == 1))
+        FP_values.append(FP)
+    
+    plt.figure(figsize=(9, 6))
+    plt.plot(thresholds, FP_values, marker='.', linewidth=1, color='red')
+    plt.xlabel("Threshold")
+    plt.ylabel("False Positives (FP)")
+    plt.title("False Positives vs Threshold")
+    plt.grid(True)
+    plt.show()
+
+
     
 
 
