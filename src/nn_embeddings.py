@@ -50,10 +50,17 @@ class SimpleNN(nn.Module):
     def __init__(self, input_dim, hidden_dim=128):
         super().__init__()
         self.net = nn.Sequential(
-            nn.Linear(input_dim, hidden_dim),
+            nn.Linear(input_dim, 512),
             nn.ReLU(),
-            nn.Linear(hidden_dim, 2),
-        )
+            nn.Dropout(0.2),
+
+    nn.Linear(512, 128),
+    nn.ReLU(),
+    nn.Dropout(0.2),
+
+    nn.Linear(128, 2)
+)
+
 
     def forward(self, x):
         return self.net(x)
