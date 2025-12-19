@@ -131,7 +131,7 @@ def main():
     # ============================================================
     # MANUAL TRIAL-AND-ERROR THRESHOLD
     # ============================================================
-    manual_threshold = 0.3550
+    manual_threshold = 0.5550
     manual_metrics = evaluate_threshold(y_test, y_scores, manual_threshold)
     print_metrics("Manual Threshold Test", manual_metrics)
 
